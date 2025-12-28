@@ -118,6 +118,11 @@ export class OverlayService extends EventEmitter {
 
     this.overlayApi.on('game-focus-changed', (window, game, focus) => {
       this.log('game window focus changes', game.name, focus);
+      if (focus) {
+        this.emit('game-focused');
+      } else {
+        this.emit('game-blurred');
+      }
     });
 
     this.overlayApi.on('game-window-changed', (window, game, reason) => {
@@ -137,6 +142,6 @@ export class OverlayService extends EventEmitter {
   private log(message: string, ...args: any[]) {
     try {
       this.emit('log', message, ...args);
-    } catch {}
+    } catch { }
   }
 }

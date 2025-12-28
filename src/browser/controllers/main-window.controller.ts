@@ -70,9 +70,15 @@ export class MainWindowController {
    */
   public createAndShow(showDevTools: boolean) {
     this.browserWindow = new BrowserWindow({
-      width: 900,
-      height: 900,
+      width: 1920,
+      height: 1080,
       show: true,
+      frame: false,
+      transparent: true,
+      fullscreen: true,
+      resizable: false,
+      alwaysOnTop: true,
+      skipTaskbar: true,
       webPreferences: {
         // NOTE: nodeIntegration and contextIsolation are only required for this
         // specific demo app, they are not a neceassry requirement for any other
@@ -84,65 +90,53 @@ export class MainWindowController {
         preload: path.join(__dirname, '../preload/preload.js'),
       },
     });
+    this.browserWindow.setAlwaysOnTop(true, "screen-saver");
+    this.browserWindow.setIgnoreMouseEvents(true, { forward: true });
 
     this.browserWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
+
+    // Listen for game focus events
+    this.setupGameFocusListeners();
+  }
+
+  /**
+   * Setup listeners for game focus/blur to show/hide overlay
+   */
+  private setupGameFocusListeners() {
+    // Listen for game focus events from overlay service
+    this.overlayService.on('game-focused', () => {
+      this.printLogMessage('Game focused - showing overlay');
+      if (this.browserWindow && !this.browserWindow.isDestroyed()) {
+        this.browserWindow.show();
+      }
+    });
+
+    this.overlayService.on('game-blurred', () => {
+      this.printLogMessage('Game blurred - hiding overlay');
+      if (this.browserWindow && !this.browserWindow.isDestroyed()) {
+        this.browserWindow.hide();
+      }
+    });
+
+    // Listen to game-exit event to hide overlay and clear shop
+    this.gepService.on('log', (message, ...args) => {
+      if (message === 'TFT-GAME-EXIT' || message === 'game-exit') {
+        this.printLogMessage('Game exited - hiding overlay and clearing shop');
+        if (this.browserWindow && !this.browserWindow.isDestroyed()) {
+          this.browserWindow.hide();
+          // Send message to renderer to clear shop
+          this.browserWindow?.webContents?.send('console-message', 'TFT-SHOP-UPDATE-EMPTY', 'Game closed');
+        }
+      }
+    });
   }
 
   /**
    *
    */
   private registerToIpc() {
-    ipcMain.handle('createOSR', async () => await this.createOSRDemoWindow());
 
-    ipcMain.handle('gep-set-required-feature', async () => {
-      await this.gepService.setRequiredFeaturesForAllSupportedGames();
-      return true;
-    });
-
-    ipcMain.handle('gep-getInfo', async () => {
-      return await this.gepService.getInfoForActiveGame();
-    });
-
-    ipcMain.handle('toggleOSRVisibility', async () => {
-      this.overlayService?.overlayApi?.getAllWindows().forEach(e => {
-        e.window.show();
-      })
-    });
-
-    ipcMain.handle('updateHotkey', async () => {
-      this.overlayHotkeysService?.updateHotkey();
-    });
-
-    ipcMain.handle('updateExclusiveOptions', async (sender, options) => {
-      this.overlayInputService?.updateExclusiveModeOptions(options);
-    });
-
-    ipcMain.handle('EXCLUSIVE_TYPE', async (sender, type) => {
-      if (!this.overlayInputService) {
-        return;
-      }
-
-      if (type === 'customWindow') {
-        this.overlayInputService.exclusiveModeAsWindow = true;
-      } else {
-        // native
-        this.overlayInputService.exclusiveModeAsWindow = false;
-      }
-    });
-
-    ipcMain.handle('EXCLUSIVE_BEHAVIOR', async (sender, behavior) => {
-      if (!this.overlayInputService) {
-        return;
-      }
-
-      if (behavior === 'toggle') {
-        this.overlayInputService.mode = ExclusiveHotKeyMode.Toggle;
-      } else {
-        // native
-        this.overlayInputService.mode = ExclusiveHotKeyMode.AutoRelease;
-      }
-    });
-
+    // Clean handlers
   }
 
   /**

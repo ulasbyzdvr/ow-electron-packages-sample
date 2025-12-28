@@ -1,143 +1,118 @@
-console.log('renderer script');
 
-//@ts-ignore
-window.gep.onMessage(function(...args) {
-  console.info(...args);
+// Renderer.ts for TFT Helper Overlay
 
-  let item = ''
-  args.forEach(arg => {
-    item = `${item}-${JSON.stringify(arg)}`;
-  })
-  addMessageToTerminal(item);
+// TEAM BUILDER: List of champions the user needs
+// This will later be populated from the team builder feature
+const WANTED_CHAMPIONS: string[] = [
+  // Example: Add champion IDs that user wants
+  "TFT16_Anivia",
+  "TFT16_Blitzcrank",
+  "TFT16_Viego",
+  // Add more as needed from team builder
+];
 
-});
+// Helper to check if a champion is wanted
+function isChampionWanted(championId: string): boolean {
+  // Direct match
+  if (WANTED_CHAMPIONS.includes(championId)) return true;
 
-
-const btn = document.querySelector('#clearTerminalTextAreaBtn') as HTMLButtonElement;
-
-btn.addEventListener('click', function(e) {
-  var begin = new Date().getTime();
-  const terminal = document.querySelector('#TerminalTextArea');
-  terminal.innerHTML = '';
-});
-
-const setRequiredBtn = document.querySelector('#setRequiredFeaturesBtn') as HTMLButtonElement;
-setRequiredBtn.addEventListener('click', async function(e) {
-  try {
-    // @ts-ignore
-    await window.gep.setRequiredFeature();
-    addMessageToTerminal('setRequiredFeatures ok');
-  } catch (error) {
-    addMessageToTerminal('setRequiredFeatures error');
-    alert('setRequiredFeatures error' + error);
-  }
-});
-
-const getInfoBtn = document.querySelector('#getInfoBtn') as HTMLButtonElement;
-getInfoBtn.addEventListener('click', async function(e) {
-  try {
-    // @ts-ignore
-    const info = await window.gep.getInfo();
-    addMessageToTerminal(JSON.stringify(info));
-  } catch (error) {
-    addMessageToTerminal('getInfo error');
-    alert('getInfo error' + error);
-  }
-});
-
-const createOSRBtn = document.querySelector('#createOSR') as HTMLButtonElement;
-createOSRBtn.addEventListener('click', async function(e) {
-  try {
-    // @ts-ignore
-    const info = await window.osr.openOSR();
-  } catch (error) {
-    addMessageToTerminal('createOSR error');
-  }
-});
-
-const visibilityOSRBtn = document.querySelector('#visibilityOSR') as HTMLButtonElement;
-visibilityOSRBtn.addEventListener('click', async function(e) {
-  try {
-    // @ts-ignore
-    const info = await window.osr.toggle();
-  } catch (error) {
-    console.log(error);
-    addMessageToTerminal('toggle osr error');
-  }
-});
-
-
-const updateHotkeyBtn = document.querySelector('#updateHotkey') as HTMLButtonElement;
-updateHotkeyBtn.addEventListener('click', async function(e) {
-  try {
-    // @ts-ignore
-    const info = await window.osr.updateHotkey();
-  } catch (error) {
-    console.log(error);
-    addMessageToTerminal('toggle osr error');
-  }
-});
-
-
-function addMessageToTerminal(message) {
-  const terminal = document.querySelector('#TerminalTextArea');
-  // $('#TerminalTextArea');
-  terminal.append(message + '\n');
-  terminal.scrollTop = terminal.scrollHeight;
+  // Try without prefix
+  const baseName = championId.replace(/^TFT\d+_/, '');
+  return WANTED_CHAMPIONS.some(w => w.endsWith(baseName));
 }
 
-export function sendExclusiveOptions() {
-  const color = (document.getElementById('colorPicker') as HTMLInputElement).value;
+// Listen for messages from GEP
+// @ts-ignore
+window.gep.onMessage(function (...args) {
+  // Always log to on-screen console for now
+  logToScreen(JSON.stringify(args));
 
-  const r = parseInt(color.substr(1,2), 16);
-  const g = parseInt(color.substr(3,2), 16);
-  const b = parseInt(color.substr(5,2), 16);
-  const a = (document.getElementById('opacityRange') as HTMLInputElement).value;
+  if (args.length >= 2 && args[0] === 'TFT-SHOP-UPDATE') {
+    const storeItems = args[1];
+    if (Array.isArray(storeItems)) {
+      updateOverlay(storeItems);
+    }
+  } else if (args.length >= 2 && args[0] === 'TFT-SHOP-UPDATE-EMPTY') {
+    clearOverlay();
+  }
+});
 
-  const options = {
-     color: `rgba(${r},${g},${b},${a})`,
-     animationDuration:
-      parseInt((document.getElementById('animationDurationRange') as HTMLInputElement).value)
-  };
 
-  // @ts-ignore
-  window.overlay.updateExclusiveOptions(options);
+function clearOverlay() {
+  const container = document.getElementById('shop-overlay');
+  if (container) container.innerHTML = '';
 }
 
+function updateOverlay(items: any[]) {
+  const container = document.getElementById('shop-overlay');
+  if (!container) return;
 
+  container.innerHTML = '';
 
-const opacityRange = document.getElementById('opacityRange') as HTMLInputElement;
-opacityRange.addEventListener('change', (ev) => {
-  sendExclusiveOptions();
-})
+  // Sort items by slot key to ensure correct order
+  items.sort((a, b) => {
+    if (a.slot < b.slot) return -1;
+    if (a.slot > b.slot) return 1;
+    return 0;
+  });
 
-const animationDurationRange = document.getElementById('animationDurationRange') as HTMLInputElement;
-animationDurationRange.addEventListener('change', (ev) => {
-  sendExclusiveOptions();
-})
+  const slots = [1, 2, 3, 4, 5];
 
-const colorPicker = document.getElementById('colorPicker') as HTMLInputElement;
-colorPicker.addEventListener('change', (ev) => {
-  sendExclusiveOptions();
-})
+  slots.forEach(slotNum => {
+    const item = items.find(i =>
+      i.slot === `shop_${slotNum}` ||
+      i.slot === `store_${slotNum}` ||
+      i.slot === `slot_${slotNum}` ||
+      i.slot.endsWith(`_${slotNum}`)
+    );
 
+    const frameDiv = document.createElement('div');
+    frameDiv.className = 'shop-card-frame';
 
-document.querySelectorAll('[name="behavior"]').forEach(
-  (radio)=>{radio.addEventListener('change',(a)=>{
-    const radio = a.target as HTMLInputElement;
-    if (radio.checked) {
-      // @ts-ignore
-      window.overlay.setExclusiveModeHotkeyBehavior(radio.value);
+    // If no item or sold, make invisible
+    if (!item || item.tier === 'sold') {
+      frameDiv.classList.add('tier-sold');
+      container.appendChild(frameDiv);
+      return;
     }
-  })
-})
 
-document.querySelectorAll('[name="exclusiveType"]').forEach(
-  (radio)=>{radio.addEventListener('change',(a)=>{
-    const radio = a.target as HTMLInputElement;
-    if (radio.checked) {
-      // @ts-ignore
-      window.overlay.setExclusiveModeType(radio.value);
+    // Add tier class
+    const tierClass = `tier-${item.tier}`;
+    if (item.tier === '?') {
+      frameDiv.classList.add('tier-unknown');
+    } else {
+      frameDiv.classList.add(tierClass);
     }
-  })
-})
+
+    // Check if this champion is wanted by the team builder
+    if (isChampionWanted(item.champion)) {
+      const indicator = document.createElement('div');
+      indicator.className = 'needed-indicator';
+      frameDiv.appendChild(indicator);
+    }
+
+    container.appendChild(frameDiv);
+  });
+}
+
+function logToScreen(msg: string) {
+  const consoleDiv = document.getElementById('debug-console');
+  if (consoleDiv) {
+    consoleDiv.style.display = 'block';
+    const p = document.createElement('div');
+    p.innerText = `${new Date().toLocaleTimeString()} - ${msg}`;
+    consoleDiv.prepend(p);
+
+    // Limit log entries
+    while (consoleDiv.children.length > 50) {
+      consoleDiv.removeChild(consoleDiv.lastChild!);
+    }
+  }
+}
+
+// Export wanted champions list for external updates (team builder)
+// @ts-ignore
+window.updateWantedChampions = function (champions: string[]) {
+  WANTED_CHAMPIONS.length = 0;
+  WANTED_CHAMPIONS.push(...champions);
+}

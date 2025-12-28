@@ -1,86 +1,168 @@
-<div class="row">
-  <script defer src="renderer.js"></script>
-  </head><div class="row"></div>
-  <table class="span12">
-  <tbody>
-    <ul class="versions code">
-      <li class="electron-version"></li>
-    </ul>
-      <tr>
-          <td class="span1"><button id ='setRequiredFeaturesBtn' class="btn">setRequiredFeatures</button></td>
-          <td class="span1"><button id ='getInfoBtn' class="btn">getInfo</button></td>
-          <td class="span1"><button id ='createOSR' class="btn">Create OSR</button></td>
-          <td class="span1"><button id ='visibilityOSR' class="btn">Show all OSR</button></td>
-          <td class="span1"><button id ='updateHotkey' class="btn">update Hotkey</button></td>
-      </tr>
-      <script>
-   </script>
-     <script>
-      const changeOpacityValue = (element) => {
-        document.getElementById('opacityValue').value = element.value;
-      }
-      const animationDurationValue = (element) => {
-        document.getElementById('animationDuration').value = element.value;
-      }
-      window.app.initialize();
+<!DOCTYPE html>
+<html>
 
-    </script>
-  </tbody>
-  </table>
-</div>
-<br/>
-<div>
-  <h2>Log:</h2>
-  <div class="row">
-  <div class="span12">
-    <textarea id="TerminalTextArea"
-      style="border: 1px solid grey; width:100%; height: 200px;">
-    </textarea>
-    <td class="span1">
-      <button style="margin-top: 10px;" id='clearTerminalTextAreaBtn' class="btn">
-        Clean
-      </button>
-    </td>
+<head>
+  <meta charset="UTF-8">
+  <title>TFT Assistant Overlay</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    /* Shop overlay container - positioned to match TFT shop at 1920x1080 */
+    #shop-overlay {
+      position: fixed;
+      /* Distance from bottom of screen */
+      bottom: 38px;
+      /* Starting X position - shop cards start after the left UI panel */
+      left: 230px;
+      /* Container for exactly 5 cards */
+      display: flex;
+      gap: 8px;
+      align-items: flex-end;
+    }
+
+    /* Each card frame matches TFT shop card dimensions */
+    .shop-card-frame {
+      width: 115px;
+      height: 180px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      border-radius: 8px;
+      background: transparent;
+      border: 3px solid transparent;
+      box-sizing: border-box;
+      position: relative;
+    }
+
+    /* Needed indicator - glowing yellow circle */
+    .needed-indicator {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffd700 0%, #ffb800 40%, #ff9500 100%);
+      box-shadow:
+        0 0 15px #ffd700,
+        0 0 30px #ffb800,
+        0 0 45px rgba(255, 183, 0, 0.5);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow:
+          0 0 15px #ffd700,
+          0 0 30px #ffb800,
+          0 0 45px rgba(255, 183, 0, 0.5);
+      }
+
+      50% {
+        transform: scale(1.15);
+        box-shadow:
+          0 0 25px #ffd700,
+          0 0 50px #ffb800,
+          0 0 70px rgba(255, 183, 0, 0.7);
+      }
+    }
+
+    /* Tier 1 - Gray */
+    .tier-1 {
+      border-color: #6b6b6b;
+      box-shadow: 0 0 12px rgba(107, 107, 107, 0.7), inset 0 0 15px rgba(107, 107, 107, 0.15);
+    }
+
+    /* Tier 2 - Green */
+    .tier-2 {
+      border-color: #11b288;
+      box-shadow: 0 0 15px rgba(17, 178, 136, 0.8), inset 0 0 18px rgba(17, 178, 136, 0.2);
+    }
+
+    /* Tier 3 - Blue */
+    .tier-3 {
+      border-color: #207ac7;
+      box-shadow: 0 0 15px rgba(32, 122, 199, 0.8), inset 0 0 18px rgba(32, 122, 199, 0.2);
+    }
+
+    /* Tier 4 - Pink/Purple */
+    .tier-4 {
+      border-color: #c38bff;
+      box-shadow: 0 0 18px rgba(195, 139, 255, 0.9), inset 0 0 22px rgba(195, 139, 255, 0.25);
+    }
+
+    /* Tier 5 - Gold/Yellow */
+    .tier-5 {
+      border-color: #f9d342;
+      box-shadow: 0 0 22px rgba(249, 211, 66, 1), inset 0 0 25px rgba(249, 211, 66, 0.3);
+    }
+
+    /* Tier 7 - Orange */
+    .tier-7 {
+      border-color: #ff6b35;
+      box-shadow: 0 0 22px rgba(255, 107, 53, 1), inset 0 0 25px rgba(255, 107, 53, 0.3);
+    }
+
+    /* Tier 11 - Red (Tibbers) */
+    .tier-11 {
+      border-color: #ff0000;
+      box-shadow: 0 0 25px rgba(255, 0, 0, 1), inset 0 0 30px rgba(255, 0, 0, 0.35);
+    }
+
+    /* Unknown tier */
+    .tier-unknown {
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
+
+    /* Sold/Empty slot - completely invisible */
+    .tier-sold {
+      border-color: transparent !important;
+      box-shadow: none !important;
+      background: transparent !important;
+    }
+
+    #debug-console {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.9);
+      color: lime;
+      width: 600px;
+      height: 300px;
+      overflow-y: auto;
+      font-size: 10px;
+      padding: 8px;
+      display: none;
+      pointer-events: auto;
+      border-radius: 6px;
+      border: 1px solid #333;
+      font-family: 'Consolas', 'Monaco', monospace;
+    }
+  </style>
+  <script defer src="renderer.js"></script>
+</head>
+
+<body>
+
+  <!-- Shop card frames container -->
+  <div id="shop-overlay">
+    <!-- Frames injected by JS -->
   </div>
-</div>
-</div>
-<br>
-<div >
-  <div class="views" style="display: flex; gap: 24px;">
-    <div class="left-view">
-      <h2>Ad view:</h2>
-      <div style='width: 400px; height: 300px; border: 1px solid;background: transparent;'>
-        <owadview slotsize='400x300' cid='mainAd' />
-      </div>
-    </div>
-    <div class="left-view">
-      <h2>Input Exclusive:</h2>
-      <div style='width: 400px; height: 300px; border: 1px solid;background: transparent;'>
-        <label style="display: block; margin-bottom: 10px;">
-          Background Color
-          <input type="color" rgba value="#0c0c0c" id="colorPicker">
-        </label>
-         <label style="display: block; margin-bottom: 10px;">
-          <div>Opacity</div>
-          <input type="range" min="0.0" max="1.0" value="0.5" step="0.1" id="opacityRange"  onchange="changeOpacityValue(this)">
-          <input type="input" readonly value="0.5" id="opacityValue">
-        </label>
-        <label style="display: block; margin-bottom: 10px;">
-          <div>Animation Duration</div>
-          <input type="range" min="0" max="1000" value="100" step="10" id="animationDurationRange" onchange="animationDurationValue(this)">
-          <input type="input" readonly value="100" id="animationDuration">
-        </label>
-        <label style="display: block; margin-bottom: 10px;">
-          <div> Type </div>
-            <input type="radio" name="exclusiveType" value="native" checked="checked"> Native
-            <input type="radio" name="exclusiveType" value="customWindow"> As Window
-        </label>
-        <label style="display: block; margin-bottom: 10px;">
-          <div> hotkey Behavior </div>
-            <input type="radio" name="behavior" value="toggle" checked="checked"> toggle
-            <input type="radio" name="behavior" value="pressed"> pressed
-        </label>
-      </div>
-    </div>
-  </div>
-</div>
+
+  <div id="debug-console"></div>
+
+  <script>
+    window.app.initialize();
+  </script>
+</body>
+
+</html>
