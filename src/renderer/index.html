@@ -15,44 +15,74 @@
       user-select: none;
     }
 
-    /* Shop overlay container - positioned to match TFT shop at 1920x1080 */
-    #shop-overlay {
-      position: fixed;
-      /* Distance from bottom of screen */
-      bottom: 38px;
-      /* Starting X position - shop cards start after the left UI panel */
-      left: 230px;
-      /* Container for exactly 5 cards */
-      display: flex;
-      gap: 8px;
-      align-items: flex-end;
+    .hidden {
+      display: none !important;
     }
 
-    /* Each card frame matches TFT shop card dimensions */
+    /* Shop overlay container */
+    #shop-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    /* Each card frame */
     .shop-card-frame {
-      width: 115px;
-      height: 180px;
+      width: 193px;
+      height: 144px;
       display: flex;
       justify-content: center;
       align-items: center;
       border-radius: 8px;
       background: transparent;
-      border: 3px solid transparent;
+      border: 5px solid transparent;
       box-sizing: border-box;
-      position: relative;
+      position: absolute;
+      will-change: transform, box-shadow;
+      transform: translate3d(0, 0, 0);
+      transition: all 0.3s ease;
     }
 
-    /* Needed indicator - glowing yellow circle */
+    /* Individual card positions */
+    .shop-card-frame:nth-child(1) {
+      left: 480px;
+      top: 928px;
+    }
+
+    .shop-card-frame:nth-child(2) {
+      left: 681px;
+      top: 928px;
+    }
+
+    .shop-card-frame:nth-child(3) {
+      left: 882px;
+      top: 928px;
+    }
+
+    .shop-card-frame:nth-child(4) {
+      left: 1084px;
+      top: 928px;
+    }
+
+    .shop-card-frame:nth-child(5) {
+      left: 1285px;
+      top: 928px;
+    }
+
+    /* Needed indicator - Animasyonlu sarı nokta */
     .needed-indicator {
-      width: 40px;
-      height: 40px;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
-      background: radial-gradient(circle, #ffd700 0%, #ffb800 40%, #ff9500 100%);
-      box-shadow:
-        0 0 15px #ffd700,
-        0 0 30px #ffb800,
-        0 0 45px rgba(255, 183, 0, 0.5);
-      animation: pulse 1.5s ease-in-out infinite;
+      background: #ffd700;
+      box-shadow: 0 0 10px #ffd700, 0 0 20px #ffd700;
+      animation: pulse 2s ease-in-out infinite;
     }
 
     @keyframes pulse {
@@ -60,74 +90,468 @@
       0%,
       100% {
         transform: scale(1);
-        box-shadow:
-          0 0 15px #ffd700,
-          0 0 30px #ffb800,
-          0 0 45px rgba(255, 183, 0, 0.5);
+        opacity: 1;
       }
 
       50% {
-        transform: scale(1.15);
-        box-shadow:
-          0 0 25px #ffd700,
-          0 0 50px #ffb800,
-          0 0 70px rgba(255, 183, 0, 0.7);
+        transform: scale(1.1);
+        opacity: 0.8;
       }
     }
 
-    /* Tier 1 - Gray */
+    /* Tier colors - Kalın border ve glow efekti */
     .tier-1 {
       border-color: #6b6b6b;
-      box-shadow: 0 0 12px rgba(107, 107, 107, 0.7), inset 0 0 15px rgba(107, 107, 107, 0.15);
+      box-shadow: 0 0 15px rgba(107, 107, 107, 0.6);
     }
 
-    /* Tier 2 - Green */
     .tier-2 {
       border-color: #11b288;
-      box-shadow: 0 0 15px rgba(17, 178, 136, 0.8), inset 0 0 18px rgba(17, 178, 136, 0.2);
+      box-shadow: 0 0 15px rgba(17, 178, 136, 0.6);
     }
 
-    /* Tier 3 - Blue */
     .tier-3 {
       border-color: #207ac7;
-      box-shadow: 0 0 15px rgba(32, 122, 199, 0.8), inset 0 0 18px rgba(32, 122, 199, 0.2);
+      box-shadow: 0 0 15px rgba(32, 122, 199, 0.6);
     }
 
-    /* Tier 4 - Pink/Purple */
     .tier-4 {
       border-color: #c38bff;
-      box-shadow: 0 0 18px rgba(195, 139, 255, 0.9), inset 0 0 22px rgba(195, 139, 255, 0.25);
+      box-shadow: 0 0 15px rgba(195, 139, 255, 0.6);
     }
 
-    /* Tier 5 - Gold/Yellow */
     .tier-5 {
       border-color: #f9d342;
-      box-shadow: 0 0 22px rgba(249, 211, 66, 1), inset 0 0 25px rgba(249, 211, 66, 0.3);
+      box-shadow: 0 0 15px rgba(249, 211, 66, 0.6);
     }
 
-    /* Tier 7 - Orange */
     .tier-7 {
       border-color: #ff6b35;
-      box-shadow: 0 0 22px rgba(255, 107, 53, 1), inset 0 0 25px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 0 15px rgba(255, 107, 53, 0.6);
     }
 
-    /* Tier 11 - Red (Tibbers) */
     .tier-11 {
       border-color: #ff0000;
-      box-shadow: 0 0 25px rgba(255, 0, 0, 1), inset 0 0 30px rgba(255, 0, 0, 0.35);
+      box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+      animation: glow-red 1.5s ease-in-out infinite;
     }
 
-    /* Unknown tier */
+    @keyframes glow-red {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+      }
+
+      50% {
+        box-shadow: 0 0 30px rgba(255, 0, 0, 1);
+      }
+    }
+
     .tier-unknown {
       border-color: rgba(255, 255, 255, 0.5);
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     }
 
-    /* Sold/Empty slot - completely invisible */
     .tier-sold {
       border-color: transparent !important;
       box-shadow: none !important;
       background: transparent !important;
+      animation: none !important;
+    }
+
+    /* Settings button */
+    #settings-btn {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 40px;
+      height: 40px;
+      background: rgba(0, 0, 0, 0.8);
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      cursor: pointer;
+      pointer-events: auto;
+      display: flex;
+      /* Her zaman görünür */
+      align-items: center;
+      justify-content: center;
+      color: #ffd700;
+      font-size: 24px;
+      z-index: 100000;
+      /* Çok yüksek z-index */
+    }
+
+    #settings-btn:hover {
+      background: rgba(255, 215, 0, 0.2);
+    }
+
+    /* Settings panel */
+    #settings-panel {
+      position: fixed;
+      top: 60px;
+      right: 10px;
+      width: 500px;
+      max-height: 85vh;
+      background: rgba(10, 14, 20, 0.98);
+      border: 1px solid #463714;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+      border-radius: 4px;
+      padding: 0;
+      pointer-events: auto;
+      display: none;
+      overflow-y: auto;
+      z-index: 99999;
+      color: #cdbe91;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    #settings-panel.active {
+      display: block;
+    }
+
+    .panel-header {
+      padding: 15px;
+      background: rgba(30, 35, 40, 0.9);
+      border-bottom: 1px solid #463714;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .panel-header h3 {
+      margin: 0;
+      color: #f0e6d2;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .panel-content {
+      padding: 15px;
+    }
+
+    /* Trait Grid */
+    .trait-grid-container {
+      margin-bottom: 20px;
+    }
+
+    .trait-grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 12px;
+      color: #888;
+    }
+
+    .clear-traits-btn {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 11px;
+      text-transform: uppercase;
+    }
+
+    .clear-traits-btn:hover {
+      color: #f0e6d2;
+    }
+
+    .trait-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    /* Scrollbar for grid */
+    .trait-grid::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .trait-grid::-webkit-scrollbar-thumb {
+      background: #463714;
+      border-radius: 2px;
+    }
+
+    .trait-item {
+      display: flex;
+      align-items: center;
+      padding: 5px;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: all 0.2s;
+      border-radius: 4px;
+    }
+
+    .trait-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .trait-item.active {
+      background: rgba(200, 155, 60, 0.2);
+      border-color: rgba(200, 155, 60, 0.5);
+    }
+
+    .trait-item.inactive {
+      opacity: 0.4;
+    }
+
+    .trait-icon-hex {
+      width: 24px;
+      height: 24px;
+      background: #111;
+      margin-right: 8px;
+      clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #444;
+    }
+
+    .trait-icon-hex img {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+    }
+
+    .trait-name {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+    .trait-item.active .trait-name {
+      color: #f0e6d2;
+      font-weight: 600;
+      text-shadow: 0 0 5px rgba(200, 155, 60, 0.5);
+    }
+
+    /* Arama kutusu */
+    .search-box {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid #463714;
+      border-radius: 4px;
+      color: #f0e6d2;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .search-box::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    .search-box:focus {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: #c89b3c;
+    }
+
+    .trait-filter {
+      display: none;
+      /* Hide original select if present */
+    }
+
+    /* Custom Select */
+    /* Removed custom-trait-select styles */
+
+    /* Hızlı seçim butonları */
+    .quick-actions {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+      justify-content: flex-end;
+    }
+
+    .quick-btn {
+      padding: 6px 12px;
+      background: rgba(50, 50, 50, 0.5);
+      border: 1px solid #463714;
+      border-radius: 4px;
+      color: #cdbe91;
+      font-size: 11px;
+      cursor: pointer;
+      text-transform: uppercase;
+      transition: all 0.2s;
+      pointer-events: auto;
+    }
+
+    .quick-btn:hover {
+      background: rgba(255, 215, 0, 0.3);
+      transform: translateY(-1px);
+      border-color: #c89b3c;
+      color: #f0e6d2;
+    }
+
+    .quick-btn:active {
+      transform: translateY(0);
+    }
+
+    /* Seçim sayacı */
+    /* Removed selection-counter styles */
+
+    .champion-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      max-height: 50vh;
+      overflow-y: auto;
+      padding-right: 5px;
+      /* Scrollbar için boşluk */
+    }
+
+    /* Scrollbar Tasarımı */
+    .champion-list::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .champion-list::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+    }
+
+    .champion-list::-webkit-scrollbar-thumb {
+      background: #ffd700;
+      border-radius: 3px;
+    }
+
+    /* Kategori Başlığı */
+    .cost-group h4 {
+      margin: 0 0 8px 0;
+      padding-bottom: 4px;
+      border-bottom: 1px solid rgba(255, 215, 0, 0.3);
+      color: #ffd700;
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Grid Layout for Champions */
+    .cost-group-items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+      gap: 8px;
+    }
+
+    /* Champion Card */
+    .champion-card {
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+      border-radius: 4px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .champion-card:hover {
+      transform: scale(1.05);
+      z-index: 1;
+    }
+
+    .champion-card.selected {
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .champion-card img {
+      width: 100%;
+      height: auto;
+      display: block;
+      /* background-color: #1a1a1a;  Resim yüklenene kadar */
+    }
+
+    .champion-card .champ-name {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      font-size: 9px;
+      text-align: center;
+      padding: 2px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      z-index: 2;
+    }
+
+    /* Trait Icons */
+    .traits-container {
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      z-index: 2;
+    }
+
+    .trait-icon {
+      width: 14px;
+      height: 14px;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 50%;
+      padding: 1px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* Seçildi işareti (tik) */
+    .champion-card.selected::after {
+      content: '✓';
+      position: absolute;
+      top: 2px;
+      right: 2px;
+      background: #ffd700;
+      color: black;
+      font-size: 10px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+
+    /* Search'te gizlenenler */
+    .champion-card.hidden,
+    .cost-group.hidden {
+      display: none;
+    }
+
+
+    /* Shop Overlay States */
+    .tier-sold {
+      opacity: 0.3;
+      filter: grayscale(100%);
+    }
+
+    .tier-unknown {
+      border-color: #888;
+      border-style: dashed;
+    }
+
+    .wanted-glow {
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.8), inset 0 0 10px rgba(255, 215, 0, 0.3);
+      animation: pulse-border 1.5s infinite alternate;
+      z-index: 100 !important;
+    }
+
+    @keyframes pulse-border {
+      from {
+        border-color: rgba(255, 215, 0, 0.6);
+      }
+
+      to {
+        border-color: #ffd700;
+        transform: scale(1.02);
+      }
     }
 
     #debug-console {
@@ -142,16 +566,61 @@
       font-size: 10px;
       padding: 8px;
       display: none;
+      /* Terminalde göster */
       pointer-events: auto;
       border-radius: 6px;
       border: 1px solid #333;
       font-family: 'Consolas', 'Monaco', monospace;
+      z-index: 200000;
     }
   </style>
   <script defer src="renderer.js"></script>
 </head>
 
 <body>
+
+  <!-- Settings Button -->
+  <div id="settings-btn" title="Şampiyonları Seç">⚙</div>
+
+  <!-- Settings Panel -->
+  <div id="settings-panel">
+    <div class="panel-header">
+      <h3>TFT Helper Ayarlar</h3>
+    </div>
+
+    <div class="panel-content">
+      <!-- Trait Grid -->
+      <div class="trait-grid-container">
+        <div class="trait-grid-header">
+          <span>ÖZELLİK FİLTRESİ</span>
+          <button class="clear-traits-btn" id="clear-traits-header-btn">TEMİZLE</button>
+        </div>
+        <div id="trait-grid" class="trait-grid">
+          <!-- Traits injected here -->
+        </div>
+      </div>
+
+      <!-- Arama kutusu -->
+      <input type="text" id="champion-search" class="search-box" placeholder="Şampiyon ara...">
+
+      <!-- Hızlı seçim butonları -->
+      <div class="quick-actions">
+        <button class="quick-btn" id="select-all-btn">Tümünü Seç</button>
+        <button class="quick-btn" id="clear-all-btn">Temizle</button>
+      </div>
+
+      <!-- Seçim sayacı -->
+      <div class="selection-counter" id="selection-counter" style="display:none;">0 şampiyon seçildi</div>
+
+      <!-- Şampiyon listesi -->
+      <div id="champion-list" class="champion-list">
+        <!-- Champions will be injected here -->
+      </div>
+    </div>
+
+    <!-- Hidden input to store value -->
+    <input type="hidden" id="trait-filter" value="">
+  </div>
 
   <!-- Shop card frames container -->
   <div id="shop-overlay">

@@ -6,6 +6,7 @@ import { OverlayService } from '../services/overlay.service';
 import { overwolf } from '@overwolf/ow-electron';
 import { OverlayHotkeysService } from '../services/overlay-hotkeys.service';
 import { ExclusiveHotKeyMode, OverlayInputService } from '../services/overlay-input.service';
+import { CHAMPION_COSTS, getChampionImage, getChampionCosts, getChampionDataWithImages } from '../tft-data';
 
 const owElectronApp = electronApp as overwolf.OverwolfApp;
 
@@ -50,6 +51,10 @@ export class MainWindowController {
    *
    */
   public printLogMessage(message: String, ...args: any[]) {
+    // Terminale yazdır
+    console.log(`[${new Date().toLocaleTimeString()}]`, message, ...args);
+
+    // Renderer'a gönder
     if (this.browserWindow?.isDestroyed() ?? true) {
       return;
     }
@@ -86,11 +91,13 @@ export class MainWindowController {
         nodeIntegration: true,
         contextIsolation: true,
         devTools: showDevTools,
+        webSecurity: false, // Community Dragon'dan görselleri yükleyebilmek için
         // relative to root folder of the project
         preload: path.join(__dirname, '../preload/preload.js'),
       },
     });
-    this.browserWindow.setAlwaysOnTop(true, "screen-saver");
+    // 'normal' seviyesi: Oyun açıkken en üstte, Alt+Tab yapınca arkada kalır
+    this.browserWindow.setAlwaysOnTop(true, "normal");
     this.browserWindow.setIgnoreMouseEvents(true, { forward: true });
 
     this.browserWindow.loadFile(path.join(__dirname, '../renderer/index.html'));
@@ -100,23 +107,12 @@ export class MainWindowController {
   }
 
   /**
-   * Setup listeners for game focus/blur to show/hide overlay
+   * Setup listeners for game events
    */
   private setupGameFocusListeners() {
-    // Listen for game focus events from overlay service
-    this.overlayService.on('game-focused', () => {
-      this.printLogMessage('Game focused - showing overlay');
-      if (this.browserWindow && !this.browserWindow.isDestroyed()) {
-        this.browserWindow.show();
-      }
-    });
-
-    this.overlayService.on('game-blurred', () => {
-      this.printLogMessage('Game blurred - hiding overlay');
-      if (this.browserWindow && !this.browserWindow.isDestroyed()) {
-        this.browserWindow.hide();
-      }
-    });
+    // Focus/blur event'leri glitch'e neden oluyor, tamamen kaldırıldı
+    // Overlay her zaman gösteriliyor
+    // Kullanıcı isterse ayarlar butonuna tıklayıp paneli kapatabilir
 
     // Listen to game-exit event to hide overlay and clear shop
     this.gepService.on('log', (message, ...args) => {
@@ -124,6 +120,8 @@ export class MainWindowController {
         this.printLogMessage('Game exited - hiding overlay and clearing shop');
         if (this.browserWindow && !this.browserWindow.isDestroyed()) {
           this.browserWindow.hide();
+          // Oyun kapandığında mouse passthrough'u true yap
+          this.browserWindow.setIgnoreMouseEvents(true, { forward: true });
           // Send message to renderer to clear shop
           this.browserWindow?.webContents?.send('console-message', 'TFT-SHOP-UPDATE-EMPTY', 'Game closed');
         }
@@ -132,11 +130,25 @@ export class MainWindowController {
   }
 
   /**
-   *
+   * Register IPC handlers
    */
   private registerToIpc() {
+    // Remove existing handlers to avoid duplicates on reload (if any)
+    ipcMain.removeHandler('set-mouse-passthrough');
+    ipcMain.removeHandler('get-champion-data');
 
-    // Clean handlers
+    // Mouse passthrough kontrolü
+    ipcMain.handle('set-mouse-passthrough', (event, passthrough: boolean) => {
+      if (this.browserWindow && !this.browserWindow.isDestroyed()) {
+        this.browserWindow.setIgnoreMouseEvents(passthrough, { forward: true });
+        this.printLogMessage(`Mouse passthrough set to: ${passthrough}`);
+      }
+    });
+
+    // Champion data endpoint
+    ipcMain.handle('get-champion-data', async () => {
+      return await getChampionDataWithImages();
+    });
   }
 
   /**

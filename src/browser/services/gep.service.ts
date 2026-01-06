@@ -92,11 +92,13 @@ export class GameEventsService extends EventEmitter {
     // If a game is detected by the package
     // To check if the game is running in elevated mode, use `gameInfo.isElevate`
     this.gepApi.on('game-detected', (e, gameId, name, gameInfo) => {
-      // If the game isn't in our tracking list
+      // Tüm algılanan oyunları logla
+      this.emit('log', 'gep: game-detected (all)', gameId, name, gameInfo.pid);
 
+      // If the game isn't in our tracking list
       if (!this.gepGamesId.includes(gameId)) {
         // Stops the GEP Package from connecting to the game
-        this.emit('log', 'gep: skip game-detected', gameId, name, gameInfo.pid);
+        this.emit('log', 'gep: skip game-detected (not in list)', gameId, name, gameInfo.pid);
         return;
       }
 

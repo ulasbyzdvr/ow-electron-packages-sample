@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>TFT Kart Konumlandırma Aracı</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #1a1a2e;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        /* Control Panel */
+        #control-panel {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            z-index: 1000;
+            width: 320px;
+        }
+
+        #control-panel h2 {
+            color: #ffd700;
+            margin-bottom: 15px;
+            font-size: 16px;
+            text-align: center;
+        }
+
+        .control-group {
+            margin-bottom: 12px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 12px;
+        }
+
+        .control-group input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 5px;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+
+        /* Card positions display */
+        #positions-display {
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+
+        .position-line {
+            padding: 3px 0;
+            border-bottom: 1px solid #333;
+        }
+
+        .position-line:last-child {
+            border-bottom: none;
+        }
+
+        .coord-value {
+            color: #4CAF50;
+            font-weight: bold;
+        }
+
+        /* Draggable cards */
+        .draggable-card {
+            position: absolute;
+            cursor: move;
+            border: 3px solid #ffd700;
+            border-radius: 8px;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+        }
+
+        .draggable-card:hover {
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+        }
+
+        .draggable-card.active {
+            border-color: #ff4444;
+            box-shadow: 0 0 30px rgba(255, 68, 68, 0.8);
+        }
+
+        .card-label {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            white-space: nowrap;
+            color: #ffd700;
+        }
+
+        .card-coords {
+            position: absolute;
+            bottom: -22px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            white-space: nowrap;
+            color: #4CAF50;
+            font-family: 'Consolas', monospace;
+        }
+
+        /* Screen info */
+        #screen-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            color: #888;
+        }
+
+        /* Instructions */
+        #instructions {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 11px;
+            color: #888;
+            max-width: 280px;
+        }
+
+        #instructions ul {
+            padding-left: 15px;
+        }
+
+        #instructions li {
+            margin-bottom: 5px;
+        }
+
+        /* Size input fields */
+        .size-inputs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .size-inputs input {
+            width: 80px;
+            padding: 5px;
+            background: #333;
+            border: 1px solid #555;
+            border-radius: 3px;
+            color: #fff;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Control Panel -->
+    <div id="control-panel">
+        <h2>🎮 Kart Konumlandırma Aracı</h2>
+
+        <div class="control-group">
+            <label>Kart Görseli Yükle:</label>
+            <input type="file" id="card-image" accept="image/*">
+        </div>
+
+        <div class="control-group">
+            <label>Kart Boyutu (px):</label>
+            <div class="size-inputs">
+                <input type="number" id="card-width" value="115" placeholder="Genişlik">
+                <input type="number" id="card-height" value="180" placeholder="Yükseklik">
+            </div>
+        </div>
+
+        <div class="control-group">
+            <button class="btn btn-primary" onclick="addCard()">+ Kart Ekle</button>
+            <button class="btn btn-secondary" onclick="add5Cards()">5 Kart Ekle</button>
+            <button class="btn btn-danger" onclick="clearAllCards()">Temizle</button>
+        </div>
+
+        <div class="control-group">
+            <button class="btn btn-secondary" onclick="copyPositions()">📋 Pozisyonları Kopyala</button>
+        </div>
+
+        <div id="positions-display">
+            <div style="color: #888; text-align: center;">Kart ekleyince pozisyonlar burada görünecek</div>
+        </div>
+    </div>
+
+    <!-- Screen Info -->
+    <div id="screen-info">
+        Ekran: <span id="screen-size"></span> | Mouse: <span id="mouse-pos">0, 0</span>
+    </div>
+
+    <!-- Instructions -->
+    <div id="instructions">
+        <strong style="color: #ffd700;">Kullanım:</strong>
+        <ul>
+            <li>Kart görselini yükleyin</li>
+            <li>"Kart Ekle" veya "5 Kart Ekle" tıklayın</li>
+            <li>Kartları sürükleyerek konumlandırın</li>
+            <li>Pozisyonları kopyalayıp bana gönderin</li>
+        </ul>
+    </div>
+
+    <script>
+        let cards = [];
+        let cardCount = 0;
+        let cardImageSrc = null;
+        let activeCard = null;
+        let offsetX = 0;
+        let offsetY = 0;
+
+        // Screen size display
+        document.getElementById('screen-size').textContent = `${window.innerWidth} x ${window.innerHeight}`;
+
+        // Mouse position tracking
+        document.addEventListener('mousemove', (e) => {
+            document.getElementById('mouse-pos').textContent = `${e.clientX}, ${e.clientY}`;
+        });
+
+        // Load card image
+        document.getElementById('card-image').addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    cardImageSrc = event.target.result;
+                    // Update existing cards with new image
+                    cards.forEach(card => {
+                        card.element.style.backgroundImage = `url(${cardImageSrc})`;
+                    });
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function addCard() {
+            cardCount++;
+            const width = parseInt(document.getElementById('card-width').value) || 115;
+            const height = parseInt(document.getElementById('card-height').value) || 180;
+
+            const card = document.createElement('div');
+            card.className = 'draggable-card';
+            card.id = `card-${cardCount}`;
+            card.style.width = `${width}px`;
+            card.style.height = `${height}px`;
+            card.style.left = `${100 + (cardCount - 1) * (width + 10)}px`;
+            card.style.top = `${window.innerHeight - height - 50}px`;
+
+            if (cardImageSrc) {
+                card.style.backgroundImage = `url(${cardImageSrc})`;
+            }
+
+            // Label
+            const label = document.createElement('div');
+            label.className = 'card-label';
+            label.textContent = `Kart ${cardCount}`;
+            card.appendChild(label);
+
+            // Coordinates display
+            const coords = document.createElement('div');
+            coords.className = 'card-coords';
+            coords.id = `coords-${cardCount}`;
+            coords.textContent = `X: ${parseInt(card.style.left)}, Y: ${parseInt(card.style.top)}`;
+            card.appendChild(coords);
+
+            // Drag events
+            card.addEventListener('mousedown', startDrag);
+
+            document.body.appendChild(card);
+
+            const cardData = {
+                id: cardCount,
+                element: card,
+                x: parseInt(card.style.left),
+                y: parseInt(card.style.top)
+            };
+
+            cards.push(cardData);
+            updatePositionsDisplay();
+        }
+
+        function add5Cards() {
+            for (let i = 0; i < 5; i++) {
+                addCard();
+            }
+        }
+
+        function clearAllCards() {
+            cards.forEach(card => {
+                card.element.remove();
+            });
+            cards = [];
+            cardCount = 0;
+            updatePositionsDisplay();
+        }
+
+        function startDrag(e) {
+            activeCard = e.target.closest('.draggable-card');
+            if (!activeCard) return;
+
+            activeCard.classList.add('active');
+            offsetX = e.clientX - activeCard.offsetLeft;
+            offsetY = e.clientY - activeCard.offsetTop;
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+        }
+
+        function drag(e) {
+            if (!activeCard) return;
+
+            const x = e.clientX - offsetX;
+            const y = e.clientY - offsetY;
+
+            activeCard.style.left = `${x}px`;
+            activeCard.style.top = `${y}px`;
+
+            // Update coords display
+            const cardId = activeCard.id.replace('card-', '');
+            const coordsEl = document.getElementById(`coords-${cardId}`);
+            if (coordsEl) {
+                coordsEl.textContent = `X: ${x}, Y: ${y}`;
+            }
+
+            // Update card data
+            const cardData = cards.find(c => c.id == cardId);
+            if (cardData) {
+                cardData.x = x;
+                cardData.y = y;
+            }
+
+            updatePositionsDisplay();
+        }
+
+        function stopDrag() {
+            if (activeCard) {
+                activeCard.classList.remove('active');
+            }
+            activeCard = null;
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDrag);
+        }
+
+        function updatePositionsDisplay() {
+            const display = document.getElementById('positions-display');
+
+            if (cards.length === 0) {
+                display.innerHTML = '<div style="color: #888; text-align: center;">Kart ekleyince pozisyonlar burada görünecek</div>';
+                return;
+            }
+
+            let html = '';
+            cards.forEach(card => {
+                html += `<div class="position-line">
+          Kart ${card.id}: X = <span class="coord-value">${card.x}</span>, Y = <span class="coord-value">${card.y}</span>
+        </div>`;
+            });
+            display.innerHTML = html;
+        }
+
+        function copyPositions() {
+            if (cards.length === 0) {
+                alert('Önce kart ekleyin!');
+                return;
+            }
+
+            const width = document.getElementById('card-width').value;
+            const height = document.getElementById('card-height').value;
+
+            let text = `Kart Boyutu: ${width}x${height}px\n\n`;
+            text += `Kart Pozisyonları:\n`;
+            cards.forEach(card => {
+                text += `Kart ${card.id}: X=${card.x}, Y=${card.y}\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Pozisyonlar panoya kopyalandı!');
+            }).catch(() => {
+                // Fallback - show in alert
+                alert(text);
+            });
+        }
+
+        // Window resize handler
+        window.addEventListener('resize', () => {
+            document.getElementById('screen-size').textContent = `${window.innerWidth} x ${window.innerHeight}`;
+        });
+    </script>
+</body>
+
+</html>

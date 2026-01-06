@@ -1,25 +1,25 @@
 
 console.log('** preload **')
-const { contextBridge, ipcRenderer  } = require('electron');
+const { contextBridge, ipcRenderer } = require('electron');
 
-async function initialize () {
-  function replaceText (selector: string, text: string) {
-   const element = document.querySelector<HTMLElement>(selector);
-   if (element) {
-     element.innerText = text;
-   }
- }
+async function initialize() {
+  function replaceText(selector: string, text: string) {
+    const element = document.querySelector<HTMLElement>(selector);
+    if (element) {
+      element.innerText = text;
+    }
+  }
 
- replaceText('.electron-version', `ow-electron v${process.versions.electron}`);
+  replaceText('.electron-version', `ow-electron v${process.versions.electron}`);
 }
 
 contextBridge.exposeInMainWorld('app', {
- initialize
+  initialize
 });
 
 contextBridge.exposeInMainWorld('gep', {
-  onMessage: (func) =>{
-    ipcRenderer.on('console-message',(e, ...args)=>{
+  onMessage: (func) => {
+    ipcRenderer.on('console-message', (e, ...args) => {
       func(...args);
     });
   },
@@ -50,10 +50,16 @@ contextBridge.exposeInMainWorld('overlay', {
     return ipcRenderer.invoke('EXCLUSIVE_TYPE', mode);
   },
   setExclusiveModeHotkeyBehavior: (behavior) => {
-    return ipcRenderer.invoke('EXCLUSIVE_BEHAVIOR',behavior );
+    return ipcRenderer.invoke('EXCLUSIVE_BEHAVIOR', behavior);
   },
   updateExclusiveOptions: (options) => {
     return ipcRenderer.invoke('updateExclusiveOptions', options);
+  },
+  setMousePassthrough: (passthrough: boolean) => {
+    return ipcRenderer.invoke('set-mouse-passthrough', passthrough);
+  },
+  getChampionData: () => {
+    return ipcRenderer.invoke('get-champion-data');
   }
 });
 

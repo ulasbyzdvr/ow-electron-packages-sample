@@ -12,6 +12,9 @@ const app = electronApp as overwolf.OverwolfApp;
 
 export class OverlayService extends EventEmitter {
   private isOverlayReady = false;
+  private lastFocusState: boolean | null = null;
+  private focusDebounceTimer: NodeJS.Timeout | null = null;
+  private readonly FOCUS_DEBOUNCE_MS = 500; // 500ms debounce - oyun içi tıklamaları yoksay
 
   public get overlayApi(): IOverwolfOverlayApi {
     // Do not let the application access the overlay before it is ready
@@ -118,11 +121,29 @@ export class OverlayService extends EventEmitter {
 
     this.overlayApi.on('game-focus-changed', (window, game, focus) => {
       this.log('game window focus changes', game.name, focus);
-      if (focus) {
-        this.emit('game-focused');
-      } else {
-        this.emit('game-blurred');
+
+      // Debounce: Aynı state tekrar gelirse yoksay
+      if (this.lastFocusState === focus) {
+        return;
       }
+
+      // Önceki timer'ı iptal et
+      if (this.focusDebounceTimer) {
+        clearTimeout(this.focusDebounceTimer);
+      }
+
+      // Yeni timer başlat
+      this.focusDebounceTimer = setTimeout(() => {
+        this.lastFocusState = focus;
+
+        if (focus) {
+          this.emit('game-focused');
+        } else {
+          this.emit('game-blurred');
+        }
+
+        this.focusDebounceTimer = null;
+      }, this.FOCUS_DEBOUNCE_MS);
     });
 
     this.overlayApi.on('game-window-changed', (window, game, reason) => {

@@ -25,10 +25,17 @@ export class Application {
       event.inject();
     })
 
+    // GEP ready olduğunda feature'ları set et
+    gepService.on('ready', async () => {
+      await gepService.setRequiredFeaturesForAllSupportedGames();
+    });
+
     // for gep supported games goto:
     // https://overwolf.github.io/api/electron/game-events/
+    // TFT, LOL Launcher (10902) içinde çalıştığı için onu da ekliyoruz
     gepService.registerGames([
-      kGepSupportedGameIds.TeamfightTactics,
+      kGepSupportedGameIds.TeamfightTactics, // 21570
+      10902, // LOL Launcher - TFT buradan geliyor
       //kGepSupportedGameIds.DiabloIV,
       //kGepSupportedGameIds.RocketLeague,
     ]);
